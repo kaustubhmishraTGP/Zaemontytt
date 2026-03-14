@@ -333,7 +333,7 @@ var SKIN_SRC = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST
     ctx.save();ctx.translate(-S*6,top+S*8);ctx.rotate(lArmA);drawFace(36,52,4,12,-S*2,0,S*4,S*12);ctx.restore();
     ctx.save();ctx.translate(0,top+S*4);ctx.rotate(headA);drawFace(8,8,8,8,-S*4,-S*4,S*8,S*8);ctx.restore();
     ctx.restore();
-    ctx.save();var fs=Math.max(11,Math.round(S*3));ctx.font='bold '+fs+'px monospace';var tw=ctx.measureText('Zaemon_YT').width+10,tagY=fy-PH-S*3;ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(fx-tw/2,tagY-fs-2,tw,fs+6);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Zaemon',fx,tagY);ctx.restore();
+    ctx.save();var fs=Math.max(11,Math.round(S*3));ctx.font='bold '+fs+'px monospace';var tw=ctx.measureText('Zaemon_YT').width+10,tagY=fy-PH-S*3;ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(fx-tw/2,tagY-fs-2,tw,fs+6);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Zaemon_YT',fx,tagY);ctx.restore();
   }
   (function loop(){
     requestAnimationFrame(loop);animT++;

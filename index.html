@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Zaemon | Minecraft Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d1a0e;--surface:#111d12;--surface2:#162118;--border:#2a3d2b;--accent:#5bff7f;--text:#f0f0f0;--muted:#7aad7c;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;cursor:none;}
+#bg-canvas{position:fixed;inset:0;z-index:0;opacity:.13;pointer-events:none;display:block;}
+#player-canvas{position:fixed;inset:0;z-index:25;pointer-events:none;display:block;}
+#fx-canvas{position:fixed;inset:0;z-index:45;pointer-events:none;display:block;}
+#cursor{position:fixed;z-index:9999;pointer-events:none;width:20px;height:20px;transform:translate(-50%,-50%);}
+#cursor::before{content:'';position:absolute;left:9px;top:3px;width:2px;height:14px;background:#5bff7f;box-shadow:0 0 6px #5bff7f;}
+#cursor::after{content:'';position:absolute;left:3px;top:9px;width:14px;height:2px;background:#5bff7f;box-shadow:0 0 6px #5bff7f;}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:.9rem 2.5rem;background:rgba(8,18,9,.97);backdrop-filter:blur(14px);border-bottom:2px solid var(--border);}
+.nav-logo{font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--accent);letter-spacing:.1em;text-decoration:none;}
+.nav-links{display:flex;gap:1.5rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:color .2s;font-family:'Space Mono',monospace;}
+.nav-links a:hover{color:var(--accent);}
+@media(max-width:600px){.nav-links{display:none;}nav{padding:.8rem 1.2rem;}}
+.page{position:relative;z-index:10;}
+#hero{min-height:100vh;display:flex;align-items:center;padding:6rem 4rem 4rem;gap:3rem;}
+.hero-left{flex:1;min-width:0;}
+.hero-globe-wrap{flex:0 0 400px;height:400px;}
+#globe-canvas{display:block;border-radius:50%;}
+@media(max-width:900px){
+  #hero{flex-direction:column;padding:5.5rem 1.4rem 3rem;gap:2rem;min-height:auto;}
+  .hero-globe-wrap{width:min(280px,85vw);height:min(280px,85vw);flex:none;align-self:center;}
+}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(91,255,127,.08);border:1px solid rgba(91,255,127,.3);padding:.38rem .9rem;border-radius:2px;font-size:.68rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:.14em;text-transform:uppercase;margin-bottom:1.2rem;}
+.blink{animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-title{font-family:'Space Mono',monospace;font-size:clamp(2.8rem,10vw,8rem);font-weight:700;line-height:.9;letter-spacing:-.02em;white-space:nowrap;color:#5bff7f;text-shadow:4px 4px 0 rgba(0,70,0,.7),0 0 40px rgba(91,255,127,.25);}
+.hero-sub{margin-top:.9rem;font-family:'Space Mono',monospace;font-size:.78rem;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;}
+.hero-tagline{margin-top:1.4rem;font-size:.98rem;color:#b0d4b2;max-width:440px;line-height:1.75;font-weight:300;}
+.hero-btns{margin-top:1.8rem;display:flex;gap:.8rem;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:.5rem;padding:.78rem 1.5rem;font-family:'Space Mono',monospace;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;position:relative;border:none;transition:filter .15s,transform .1s;}
+.btn::after{content:'';position:absolute;bottom:-4px;right:-4px;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:-1;}
+.btn:active{transform:translate(2px,2px);}.btn:active::after{display:none;}
+.btn-yt{background:#5ba544;color:#fff;border-top:3px solid #7dce5f;border-left:3px solid #7dce5f;border-right:3px solid #2e6622;border-bottom:3px solid #2e6622;}
+.btn-yt:hover{filter:brightness(1.2);transform:translateY(-2px);}
+.btn-dc{background:#5865f2;color:#fff;border-top:3px solid #8090ff;border-left:3px solid #8090ff;border-right:3px solid #2535bb;border-bottom:3px solid #2535bb;}
+.btn-dc:hover{filter:brightness(1.2);transform:translateY(-2px);}
+.mc-divider{width:100%;height:12px;background:#4a7c3f;border-top:3px solid #7dce5f;border-bottom:3px solid #2a4a22;}
+section{padding:5rem 4rem;max-width:1200px;margin:0 auto;}
+@media(max-width:900px){section{padding:3.5rem 1.4rem;}}
+.section-label{font-family:'Space Mono',monospace;font-size:.64rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem;opacity:.8;}
+.section-title{font-size:clamp(1.5rem,4vw,2.4rem);font-weight:700;line-height:1.1;margin-bottom:2.2rem;letter-spacing:-.02em;font-family:'Space Mono',monospace;text-shadow:2px 2px 0 rgba(0,0,0,.5);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;}
+@media(max-width:700px){.about-grid{grid-template-columns:1fr;}}
+.about-text{font-size:.98rem;line-height:1.85;color:#b0d4b2;font-weight:300;}
+.about-text strong{color:var(--text);font-weight:700;}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;align-content:start;}
+.stat-card{background:var(--surface);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;padding:1.1rem;transition:all .2s;}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.stat-number{font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--accent);}
+.stat-label{font-size:.66rem;color:var(--muted);margin-top:.3rem;text-transform:uppercase;letter-spacing:.1em;font-family:'Space Mono',monospace;}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.7rem;}
+.skill-item{background:var(--surface);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;padding:.85rem 1.1rem;display:flex;align-items:center;gap:.7rem;transition:all .15s;font-weight:600;font-size:.84rem;}
+.skill-item:hover{border-color:var(--accent);transform:translateY(-3px);background:var(--surface2);}
+.skill-icon{font-size:1.2rem;flex-shrink:0;}
+#vs-wrap{background:var(--surface);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1rem;}
+@media(max-width:600px){.vgrid{grid-template-columns:1fr;}}
+.vcard{background:var(--bg);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;overflow:hidden;transition:all .2s;text-decoration:none;color:inherit;display:block;}
+.vcard:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.6);}
+.vthumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--surface2);}
+.vph{width:100%;aspect-ratio:16/9;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:2rem;}
+.vinfo{padding:.85rem;}.vtitle{font-size:.84rem;font-weight:600;line-height:1.4;margin-bottom:.3rem;}
+.vch{font-size:.68rem;color:var(--muted);font-family:'Space Mono',monospace;}
+.vwatch{display:inline-flex;align-items:center;gap:.4rem;margin-top:.6rem;font-size:.68rem;font-family:'Space Mono',monospace;color:var(--accent);text-transform:uppercase;}
+.ctabs{display:flex;gap:.7rem;margin-bottom:1.6rem;flex-wrap:wrap;}
+.tbtn{padding:.45rem 1.1rem;background:var(--bg);border:2px solid var(--border);border-top:2px solid #3d5e3e;border-bottom:2px solid #0d150e;color:var(--muted);font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;}
+.tbtn.active,.tbtn:hover{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
+.chs{display:none;}.chs.active{display:block;}
+.comgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+@media(max-width:700px){.comgrid{grid-template-columns:1fr;}}
+.comcard{background:var(--surface);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;padding:1.6rem;transition:all .2s;text-decoration:none;color:inherit;display:block;}
+.comcard:hover{transform:translateY(-4px);border-color:var(--accent);}
+.comicon{font-size:1.8rem;margin-bottom:.7rem;}
+.comcard h3{font-size:.9rem;font-weight:700;margin-bottom:.4rem;font-family:'Space Mono',monospace;}
+.comcard p{font-size:.8rem;color:var(--muted);line-height:1.5;}
+.comlink{display:inline-flex;align-items:center;gap:.4rem;margin-top:.7rem;font-size:.66rem;font-family:'Space Mono',monospace;color:var(--accent);text-transform:uppercase;}
+footer{border-top:3px solid #4a7c3f;background:var(--surface);padding:1.6rem 4rem;display:flex;justify-content:space-between;align-items:center;z-index:10;position:relative;}
+@media(max-width:600px){footer{flex-direction:column;gap:.5rem;padding:1.2rem 1.4rem;text-align:center;}}
+.footer-logo{font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700;color:var(--accent);letter-spacing:.12em;}
+footer p{font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace;}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:150;}
+.hud-health{position:absolute;bottom:72px;left:50%;transform:translateX(-50%) translateX(-100px);display:flex;gap:2px;}
+.hud-xp-wrap{position:absolute;bottom:66px;left:50%;transform:translateX(-50%);width:440px;}
+.hud-xp-bar{height:5px;background:#000;border:1px solid #333;overflow:hidden;}
+.hud-xp-fill{height:100%;background:linear-gradient(to right,#7fff4f,#4fff7f);width:62%;transition:width .8s;}
+.hud-xp-level{font-family:'Space Mono',monospace;font-size:9px;color:#7fff4f;text-align:center;margin-top:2px;}
+.hud-hotbar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:3px;}
+.hb-slot{width:46px;height:46px;background:rgba(15,25,16,.88);border:2px solid #555;border-bottom-color:#222;border-right-color:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;position:relative;}
+.hb-slot.sel{border:2px solid #fff!important;box-shadow:0 0 8px rgba(255,255,255,.3);}
+.hb-num{font-family:'Space Mono',monospace;font-size:7px;color:#aaa;position:absolute;top:2px;right:3px;}
+@media(max-width:768px){#hud{display:none;}}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.loader{display:flex;align-items:center;justify-content:center;padding:3rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:.74rem;}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<canvas id="player-canvas"></canvas>
+<canvas id="fx-canvas"></canvas>
+<div id="cursor"></div>
+<div class="page">
+<nav>
+  <a href="#hero" class="nav-logo">&#9935; ZAEMON</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#videos">Videos</a></li>
+    <li><a href="#community">Community</a></li>
+  </ul>
+</nav>
+<section id="hero" style="max-width:100%;">
+  <div class="hero-left">
+    <div class="hero-badge"><span class="blink">&#9608;</span>&nbsp;Minecraft Creator &middot; India</div>
+    <h1 class="hero-title">ZAEMON</h1>
+    <p class="hero-sub">// Block by Block</p>
+    <p class="hero-tagline">Creating epic Minecraft adventures, builds and gameplay for the community.</p>
+    <div class="hero-btns">
+      <a href="https://youtube.com/@zaemonspy" target="_blank" class="btn btn-yt">&#9654; Subscribe on YouTube</a>
+      <a href="https://discord.gg/Ra6JK7BuCs" target="_blank" class="btn btn-dc">&#10021; Join Discord</a>
+    </div>
+  </div>
+  <div class="hero-globe-wrap">
+    <canvas id="globe-canvas" width="400" height="400"></canvas>
+  </div>
+</section>
+<div class="mc-divider"></div>
+<section id="about">
+  <p class="section-label">// 01 &mdash; About</p>
+  <h2 class="section-title reveal">About Zaemon</h2>
+  <div class="about-grid reveal">
+    <p class="about-text"><strong>Aditya</strong>, widely known as <strong>Zaemon</strong>, is a passionate Minecraft creator from <strong>India</strong>, born in <strong>2008</strong>. With a deep love for playing Minecraft, Zaemon enjoys sharing exciting gameplay, builds and creative adventures with the community.<br/><br/>Through his videos he inspires players to explore their imagination inside the Minecraft world &mdash; one block at a time.</p>
+    <div class="about-stats">
+      <div class="stat-card"><div class="stat-number">2008</div><div class="stat-label">Born</div></div>
+      <div class="stat-card"><div class="stat-number">&#127470;&#127475;</div><div class="stat-label">India</div></div>
+      <div class="stat-card"><div class="stat-number">2+</div><div class="stat-label">Channels</div></div>
+      <div class="stat-card"><div class="stat-number">&infin;</div><div class="stat-label">Builds</div></div>
+    </div>
+  </div>
+</section>
+<div class="mc-divider"></div>
+<section id="skills">
+  <p class="section-label">// 02 &mdash; Skills</p>
+  <h2 class="section-title reveal">What Zaemon Does</h2>
+  <div class="skills-grid reveal">
+    <div class="skill-item"><span class="skill-icon">&#9935;</span> Minecraft Survival</div>
+    <div class="skill-item"><span class="skill-icon">&#127959;</span> Creative Builds</div>
+    <div class="skill-item"><span class="skill-icon">&#127909;</span> Content Creation</div>
+    <div class="skill-item"><span class="skill-icon">&#127918;</span> Gameplay</div>
+    <div class="skill-item"><span class="skill-icon">&#128506;</span> World Building</div>
+    <div class="skill-item"><span class="skill-icon">&#127902;</span> Video Editing</div>
+    <div class="skill-item"><span class="skill-icon">&#128101;</span> Community Building</div>
+    <div class="skill-item"><span class="skill-icon">&#9876;</span> PvP &amp; Combat</div>
+  </div>
+</section>
+<div id="vs-wrap">
+<section id="videos" style="max-width:1200px;margin:0 auto;">
+  <p class="section-label">// 03 &mdash; Videos</p>
+  <h2 class="section-title reveal">Latest Videos</h2>
+  <div class="ctabs">
+    <button class="tbtn active" onclick="switchTab('m')">@zaemonspy</button>
+    <button class="tbtn" onclick="switchTab('e')">@zaemonextra</button>
+  </div>
+  <div id="ch-m" class="chs active"><div id="v-m" class="vgrid"><div class="loader">Loading...</div></div></div>
+  <div id="ch-e" class="chs"><div id="v-e" class="vgrid"><div class="loader">Loading...</div></div></div>
+</section>
+</div>
+<div class="mc-divider"></div>
+<section id="community">
+  <p class="section-label">// 04 &mdash; Community</p>
+  <h2 class="section-title reveal">Community</h2>
+  <p class="about-text reveal" style="margin-bottom:1.6rem;">Join the <strong>Buri Buri Gang</strong> &mdash; connect with other Minecraft players.</p>
+  <div class="comgrid reveal">
+    <a href="https://discord.gg/Ra6JK7BuCs" target="_blank" class="comcard"><div class="comicon">&#128172;</div><h3>Discord</h3><p>Join the Buri Buri Gang Discord.</p><span class="comlink">&rarr; discord.gg/Ra6JK7BuCs</span></a>
+    <a href="https://youtube.com/@zaemonspy" target="_blank" class="comcard"><div class="comicon">&#9654;</div><h3>YouTube</h3><p>Watch Zaemon's main channel.</p><span class="comlink">&rarr; @zaemonspy</span></a>
+    <a href="mailto:zaemonteam@gmail.com" class="comcard"><div class="comicon">&#9993;</div><h3>Email</h3><p>Business &amp; collaborations.</p><span class="comlink">&rarr; zaemonteam@gmail.com</span></a>
+  </div>
+</section>
+<footer>
+  <div class="footer-logo">&#9935; ZAEMON</div>
+  <p>&copy; Zaemon | Minecraft Creator</p>
+  <p>zaemon_spy</p>
+</footer>
+</div>
+<div id="hud">
+  <div class="hud-health" id="hud-hearts"></div>
+  <div class="hud-xp-wrap"><div class="hud-xp-bar"><div class="hud-xp-fill" id="xp-fill"></div></div><div class="hud-xp-level">Level 16</div></div>
+  <div class="hud-hotbar">
+    <div class="hb-slot sel"><span class="hb-num">1</span>&#9935;</div>
+    <div class="hb-slot"><span class="hb-num">2</span>&#9876;</div>
+    <div class="hb-slot"><span class="hb-num">3</span>&#9654;</div>
+    <div class="hb-slot"><span class="hb-num">4</span>&#128172;</div>
+    <div class="hb-slot"><span class="hb-num">5</span>&#129717;</div>
+    <div class="hb-slot"><span class="hb-num">6</span>&#129704;</div>
+    <div class="hb-slot"><span class="hb-num">7</span>&#127895;</div>
+    <div class="hb-slot"><span class="hb-num">8</span>&#129514;</div>
+    <div class="hb-slot"><span class="hb-num">9</span>&#11088;</div>
+  </div>
+</div>
+<script>
+var SKIN_SRC = "data:image/jpeg;base64,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";
+
+(function(){
+  var cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d'),BS=48;
+  var COLS=['#1e3318','#162810','#2a1e0e','#1a1a1a','#1a2a16','#222d14'];
+  function sr(s){var x=s;return function(){x=(x*1664525+1013904223)&0xffffffff;return(x>>>0)/4294967295;};}
+  function tile(x,y,c){var r=sr(x*7919+y*6271);cx.fillStyle=c;cx.fillRect(x,y,BS,BS);cx.fillStyle='rgba(0,0,0,0.14)';for(var i=0;i<4;i++)cx.fillRect(x+Math.floor(r()*BS),y+Math.floor(r()*BS),Math.floor(r()*8)+2,4);cx.fillStyle='rgba(0,0,0,0.28)';cx.fillRect(x+BS-3,y,3,BS);cx.fillRect(x,y+BS-3,BS,3);cx.fillStyle='rgba(255,255,255,0.04)';cx.fillRect(x,y,BS,3);cx.fillRect(x,y,3,BS);cx.strokeStyle='rgba(0,0,0,0.36)';cx.lineWidth=1;cx.strokeRect(x+.5,y+.5,BS-1,BS-1);}
+  function draw(){cv.width=window.innerWidth;cv.height=window.innerHeight;var r=sr(42),cols=Math.ceil(cv.width/BS)+1,rows=Math.ceil(cv.height/BS)+1;for(var row=0;row<rows;row++)for(var col=0;col<cols;col++)tile(col*BS,row*BS,COLS[Math.floor(r()*COLS.length)]);}
+  window.addEventListener('resize',draw);draw();
+})();
+
+(function(){
+  var cv=document.getElementById('globe-canvas'),par=cv.parentElement,ctx=cv.getContext('2d');
+  var W=par.offsetWidth||400,H=par.offsetHeight||400;
+  cv.width=W;cv.height=H;
+  window.addEventListener('resize',function(){W=par.offsetWidth||400;H=par.offsetHeight||400;cv.width=W;cv.height=H;});
+  var ETW=512,ETH=256,eo=document.createElement('canvas');eo.width=ETW;eo.height=ETH;
+  var eg=eo.getContext('2d');
+  var og=eg.createLinearGradient(0,0,0,ETH);og.addColorStop(0,'#06244a');og.addColorStop(.45,'#0d4a8e');og.addColorStop(1,'#062244');
+  eg.fillStyle=og;eg.fillRect(0,0,ETW,ETH);
+  for(var j=0;j<ETH;j+=2){eg.fillStyle='rgba(40,100,220,'+(0.015+Math.sin(j*.2)*0.007)+')';eg.fillRect(0,j,ETW,1);}
+  function land(lon,lat,w,h,col){var x=Math.round((lon+180)/360*ETW),y=Math.round((90-lat)/180*ETH);eg.fillStyle=col;eg.fillRect(x,y,Math.max(3,Math.round(w/360*ETW)),Math.max(3,Math.round(h/180*ETH)));}
+  var G='#2d6e1e',L='#3d8a28',D='#b8943a',M='#7a6848',S='#dce8ee',IC='#ecf4f8',TA='#1a3c12',JG='#185a10',LG='#4aa030';
+  land(-180,-90,360,22,IC);land(-180,-70,360,8,S);land(-180,78,360,12,IC);land(-58,60,30,26,IC);land(-62,76,36,10,IC);
+  land(-168,72,90,14,IC);land(-140,58,58,20,TA);land(-140,38,50,22,G);land(-100,28,44,16,L);land(-86,24,30,14,LG);land(-90,12,24,16,JG);land(-106,20,30,12,D);
+  land(-82,10,34,10,JG);land(-80,0,38,8,JG);land(-78,-4,42,28,G);land(-74,-32,30,20,L);land(-68,-50,18,16,M);
+  land(-12,35,42,20,L);land(-10,53,24,10,G);land(14,44,22,14,L);land(20,56,22,10,TA);land(14,64,22,10,TA);land(22,68,16,8,S);land(-26,64,14,8,IC);land(28,36,20,14,L);
+  land(-18,36,20,10,L);land(-18,14,54,24,D);land(-18,-2,54,38,G);land(10,-26,34,14,D);land(22,-28,24,20,M);land(44,-12,8,16,G);
+  land(28,14,42,22,D);land(26,28,38,14,D);
+  land(38,38,46,24,L);land(36,62,66,12,TA);land(36,74,56,10,IC);land(82,58,54,18,TA);land(78,38,66,24,G);land(60,18,38,12,D);land(66,6,30,24,L);land(70,-2,22,10,L);land(70,24,36,16,M);land(108,18,34,24,L);land(100,0,28,12,JG);land(96,-4,24,10,JG);land(108,-6,16,6,JG);land(118,2,12,16,JG);land(126,32,8,18,L);land(130,30,6,18,L);land(132,42,5,10,TA);
+  land(113,-14,54,30,D);land(115,-30,28,14,G);land(140,-14,24,18,L);land(168,-34,6,12,L);
+  for(var ni=0;ni<600;ni++){eg.fillStyle='rgba(0,0,0,'+(Math.random()*.12)+')';eg.fillRect(Math.random()*ETW,Math.random()*ETH,Math.random()*3+1,Math.random()*2+1);}
+  var co=document.createElement('canvas');co.width=ETW;co.height=ETH;var cg=co.getContext('2d');
+  [[0,24,80,20],[90,18,60,14],[160,22,70,18],[240,20,80,16],[320,26,90,18],[420,22,70,14],[10,44,50,12],[80,40,60,16],[150,46,70,14],[230,42,50,14],[300,44,60,12],[380,40,80,16],[20,66,90,18],[120,62,70,14],[200,68,60,16],[280,64,80,18]].forEach(function(c){
+    var grd=cg.createRadialGradient(c[0]+c[2]/2,c[1]+c[3]/2,0,c[0]+c[2]/2,c[1]+c[3]/2,Math.max(c[2],c[3])/1.5);
+    grd.addColorStop(0,'rgba(255,255,255,0.55)');grd.addColorStop(1,'rgba(255,255,255,0)');
+    cg.fillStyle=grd;cg.fillRect(c[0],c[1],Math.min(c[2],ETW-c[0]),Math.min(c[3],ETH-c[1]));
+  });
+  var earthPx=eg.getImageData(0,0,ETW,ETH).data,cloudPx=cg.getImageData(0,0,ETW,ETH).data;
+  var GS=294,go=document.createElement('canvas');go.width=GS;go.height=GS;
+  var gg=go.getContext('2d'),imgD=gg.createImageData(GS,GS),gd=imgD.data;
+  var rotY=0.3,rotX=0.1,cloudRot=0,drag=false,lx=0,ly=0,autoRot=true;
+  function renderSphere(){
+    var cx2=GS/2,cy2=GS/2,R=GS/2-2;
+    var cosX=Math.cos(rotX),sinX=Math.sin(rotX),cosY=Math.cos(rotY),sinY=Math.sin(rotY);
+    var cosCY=Math.cos(rotY+cloudRot),sinCY=Math.sin(rotY+cloudRot);
+    for(var py=0;py<GS;py++){for(var px2=0;px2<GS;px2++){
+      var nx=(px2-cx2)/R,ny=(py-cy2)/R,dd=nx*nx+ny*ny,i4=(py*GS+px2)*4;
+      if(dd>1){gd[i4+3]=0;continue;}
+      var nz=Math.sqrt(1-dd);
+      var x3=nx*cosY+nz*sinY,z3=-nx*sinY+nz*cosY,y3=ny*cosX-z3*sinX,z4=ny*sinX+z3*cosX;
+      var lat=Math.asin(Math.max(-1,Math.min(1,y3))),lon=Math.atan2(x3,z4);
+      var tx=Math.round(((lon+Math.PI)/(Math.PI*2))*ETW)%ETW,ty2=Math.round(((Math.PI/2-lat)/Math.PI)*ETH);
+      var tidx=(Math.max(0,Math.min(ETH-1,ty2))*ETW+((tx+ETW)%ETW))*4;
+      var r=earthPx[tidx],g2=earthPx[tidx+1],b=earthPx[tidx+2];
+      var cx3=nx*cosCY+nz*sinCY,cz3=-nx*sinCY+nz*cosCY,cy3=ny*cosX-cz3*sinX,cz4=ny*sinX+cz3*cosX;
+      var clat=Math.asin(Math.max(-1,Math.min(1,cy3))),clon=Math.atan2(cx3,cz4);
+      var ctx2=Math.round(((clon+Math.PI)/(Math.PI*2))*ETW)%ETW,cty2=Math.round(((Math.PI/2-clat)/Math.PI)*ETH);
+      var cidx=(Math.max(0,Math.min(ETH-1,cty2))*ETW+((ctx2+ETW)%ETW))*4,ca=cloudPx[cidx+3]/255*0.4;
+      r=Math.round(r*(1-ca)+255*ca);g2=Math.round(g2*(1-ca)+255*ca);b=Math.round(b*(1-ca)+255*ca);
+      var lgt=0.4+0.6*Math.max(0,x3*0.7+y3*0.3+z4*0.65);
+      gd[i4]=Math.min(255,r*lgt);gd[i4+1]=Math.min(255,g2*lgt);gd[i4+2]=Math.min(255,b*lgt);gd[i4+3]=255;
+    }}
+    gg.putImageData(imgD,0,0);
+  }
+  var stars=[];for(var si=0;si<100;si++)stars.push({x:Math.random(),y:Math.random(),r:0.5+Math.random()*1.2,a:0.4+Math.random()*0.6});
+  function drawGlobeFrame(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(function(s){ctx.globalAlpha=s.a*.7;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);ctx.fill();});
+    ctx.globalAlpha=1;
+    renderSphere();
+    var gs=Math.min(W,H)-4,gx=(W-gs)/2,gy=(H-gs)/2;
+    ctx.save();ctx.beginPath();ctx.arc(W/2,H/2,gs/2,0,Math.PI*2);ctx.clip();ctx.drawImage(go,gx,gy,gs,gs);ctx.restore();
+    var atmo=ctx.createRadialGradient(W/2,H/2,gs/2*.9,W/2,H/2,gs/2*1.1);
+    atmo.addColorStop(0,'rgba(100,180,255,0)');atmo.addColorStop(.5,'rgba(80,160,255,.1)');atmo.addColorStop(1,'rgba(60,120,255,0)');
+    ctx.fillStyle=atmo;ctx.beginPath();ctx.arc(W/2,H/2,gs/2*1.1,0,Math.PI*2);ctx.fill();
+  }
+  cv.addEventListener('mousedown',function(e){drag=true;autoRot=false;lx=e.clientX;ly=e.clientY;});
+  window.addEventListener('mouseup',function(){drag=false;setTimeout(function(){autoRot=true;},2500);});
+  window.addEventListener('mousemove',function(e){
+    if(!drag)return;
+    rotY-=(e.clientX-lx)*.015;
+    rotX-=(e.clientY-ly)*.01;
+    rotX=Math.max(-.9,Math.min(.9,rotX));
+    lx=e.clientX;ly=e.clientY;
+  });
+  cv.addEventListener('touchstart',function(e){drag=true;autoRot=false;lx=e.touches[0].clientX;ly=e.touches[0].clientY;},{passive:true});
+  window.addEventListener('touchend',function(){drag=false;setTimeout(function(){autoRot=true;},2500);});
+  window.addEventListener('touchmove',function(e){
+    if(!drag)return;
+    rotY-=(e.touches[0].clientX-lx)*.018;
+    rotX-=(e.touches[0].clientY-ly)*.012;
+    lx=e.touches[0].clientX;ly=e.touches[0].clientY;
+  },{passive:true});
+  var lastT=0;
+  function loop(t){requestAnimationFrame(loop);if(autoRot)rotY+=.004;cloudRot+=.0008;if(t-lastT>33){drawGlobeFrame();lastT=t;}}
+  requestAnimationFrame(loop);
+})();
+
+(function(){
+  var cv=document.getElementById('player-canvas'),ctx=cv.getContext('2d');
+  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  var skin=new Image(),skinOK=false;
+  skin.src=SKIN_SRC;skin.onload=function(){skinOK=true;};
+  var isMobile=window.innerWidth<=768,S=isMobile?2.8:3.8,PH=32*S;
+  function groundY(){return cv.height-(isMobile?75:95);}
+  var px=window.innerWidth*0.5,facing=1,animT=0,state='walk',actionTimer=0,jumpVY=0,jumpY=0,targetPX=-1;
+  function setState(s){state=s;if(s==='mine')actionTimer=110;if(s==='idle')actionTimer=60+Math.floor(Math.random()*80);if(s==='wave')actionTimer=75;if(s==='jump'){jumpVY=isMobile?6:8;jumpY=0;}}
+  window.reactPlayerToClick=function(sx){var d=Math.abs(sx-px);if(d<120)setState('wave');else{targetPX=sx;state='chase';actionTimer=300;}};
+  function drawFace(sx,sy,sw,sh,dx,dy,dw,dh){if(skinOK)ctx.drawImage(skin,sx,sy,sw,sh,dx,dy,dw,dh);else{ctx.fillStyle='#5C3317';ctx.fillRect(dx,dy,dw,dh);}}
+  function drawPlayer(fx,fy,legA,rArmA,lArmA,headA){
+    ctx.save();ctx.translate(fx,fy);ctx.scale(facing,1);ctx.imageSmoothingEnabled=false;
+    var top=-PH;
+    ctx.globalAlpha=Math.max(0,.2*(1-jumpY*.008));ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(0,2,S*4.5,S*1.2,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    ctx.save();ctx.translate(S*1.8,top+S*20);ctx.rotate(legA);drawFace(4,20,4,12,-S*2,0,S*4,S*12);ctx.restore();
+    ctx.save();ctx.translate(-S*1.8,top+S*20);ctx.rotate(-legA);drawFace(20,52,4,12,-S*2,0,S*4,S*12);ctx.restore();
+    drawFace(20,20,8,12,-S*4,top+S*8,S*8,S*12);
+    ctx.save();ctx.translate(S*6,top+S*8);ctx.rotate(rArmA);drawFace(44,20,4,12,-S*2,0,S*4,S*12);
+    if(state==='mine'){ctx.fillStyle='#6b3a1a';ctx.fillRect(-S*.5,S*8,S,S*7);ctx.fillStyle='#aaa';ctx.fillRect(-S*3,S*7,S*6,S*2);}
+    ctx.restore();
+    ctx.save();ctx.translate(-S*6,top+S*8);ctx.rotate(lArmA);drawFace(36,52,4,12,-S*2,0,S*4,S*12);ctx.restore();
+    ctx.save();ctx.translate(0,top+S*4);ctx.rotate(headA);drawFace(8,8,8,8,-S*4,-S*4,S*8,S*8);ctx.restore();
+    ctx.restore();
+    ctx.save();var fs=Math.max(11,Math.round(S*3));ctx.font='bold '+fs+'px monospace';var tw=ctx.measureText('Zaemon').width+10,tagY=fy-PH-S*3;ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(fx-tw/2,tagY-fs-2,tw,fs+6);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Zaemon',fx,tagY);ctx.restore();
+  }
+  (function loop(){
+    requestAnimationFrame(loop);animT++;
+    var SPEED=state==='chase'?3.2:1.6;
+    var ls=(state==='walk'||state==='chase')?Math.sin(animT*.14)*.75:0;
+    var ra=state==='mine'?Math.sin(animT*.2)*.9-.35:state==='walk'||state==='chase'?-ls:state==='wave'?Math.sin(animT*.14)*1.0+.55:0;
+    var la=(state==='walk'||state==='chase')?ls:0,ha=state==='idle'?Math.sin(animT*.03)*.3:0;
+    if(state==='walk'){px+=SPEED*facing;if(px>cv.width-60){facing=-1;var rr=Math.random();if(rr<.3)setState('mine');else if(rr<.5)setState('jump');}if(px<60){facing=1;var rr=Math.random();if(rr<.3)setState('mine');else if(rr<.5)setState('jump');}if(Math.random()<.003)setState('idle');if(Math.random()<.002)setState('jump');}
+    else if(state==='mine'||state==='idle'||state==='wave'){actionTimer--;if(actionTimer<=0)setState('walk');}
+    else if(state==='chase'){if(targetPX>=0){var dx=targetPX-px;facing=dx>0?1:-1;px+=SPEED*2.2*facing;if(Math.abs(dx)<18){targetPX=-1;setState(Math.random()<.5?'wave':'idle');}}else setState('walk');}
+    else if(state==='jump'){jumpVY-=.36;jumpY+=jumpVY;if(jumpY<0){jumpY=0;jumpVY=0;setState('walk');}ra=-.85;la=-.85;ls=.3;}
+    ctx.clearRect(0,0,cv.width,cv.height);drawPlayer(px,groundY()-jumpY,ls,ra,la,ha);window._playerX=px;
+  })();
+})();
+
+(function(){
+  var cv=document.getElementById('fx-canvas'),ctx=cv.getContext('2d');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  var trail=[],parts=[],ftexts=[],cursor=document.getElementById('cursor');
+  var PCOLS=['#5bff7f','#3de0ff','#ffff55','#ff9955'],BCOLS=['#5ba544','#8B5E3C','#7a7a7a','#5b6bff','#c8a040'];
+  window.addEventListener('mousemove',function(e){cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';trail.push({x:e.clientX,y:e.clientY,life:1,size:2+Math.random()*4,color:PCOLS[Math.floor(Math.random()*PCOLS.length)]});if(trail.length>30)trail.shift();});
+  window.addEventListener('click',function(e){
+    for(var i=0;i<14;i++){var a=Math.random()*Math.PI*2,sp=2+Math.random()*6;parts.push({x:e.clientX,y:e.clientY,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,life:1,size:3+Math.random()*8,color:BCOLS[Math.floor(Math.random()*BCOLS.length)],rot:Math.random()*Math.PI*2,rotV:(Math.random()-.5)*.35,g:.27});}
+    parts.push({x:e.clientX,y:e.clientY,life:1,ring:true,size:0,grow:6,color:'rgba(91,255,127,.6)'});
+    var msgs=['+1 Block','Mine!','Smash!','+XP','Buri Buri!','GG!','POG!'];ftexts.push({x:e.clientX,y:e.clientY,text:msgs[Math.floor(Math.random()*msgs.length)],life:1,vy:-2.8});
+    if(window.reactPlayerToClick)window.reactPlayerToClick(e.clientX);
+    var slots=document.querySelectorAll('.hb-slot');slots.forEach(function(s){s.classList.remove('sel');});var pick=slots[Math.floor(Math.random()*9)];if(pick)pick.classList.add('sel');
+    var xp=document.getElementById('xp-fill');if(xp)xp.style.width=(44+Math.random()*52)+'%';
+  });
+  (function loop(){
+    requestAnimationFrame(loop);ctx.clearRect(0,0,cv.width,cv.height);
+    for(var i=trail.length-1;i>=0;i--){var t=trail[i];t.life-=.07;if(t.life<=0){trail.splice(i,1);continue;}ctx.save();ctx.globalAlpha=t.life*.7;ctx.fillStyle=t.color;ctx.shadowBlur=5;ctx.shadowColor=t.color;ctx.fillRect(t.x-t.size/2,t.y-t.size/2,t.size,t.size);ctx.restore();}
+    for(var i=parts.length-1;i>=0;i--){var p=parts[i];p.life-=.025;if(p.life<=0){parts.splice(i,1);continue;}if(p.ring){p.size+=p.grow;ctx.save();ctx.globalAlpha=p.life*.5;ctx.strokeStyle=p.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.stroke();ctx.restore();continue;}p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.rot+=p.rotV;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.shadowBlur=3;ctx.shadowColor=p.color;ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size);ctx.restore();}
+    for(var i=ftexts.length-1;i>=0;i--){var t=ftexts[i];t.life-=.016;t.y+=t.vy;if(t.life<=0){ftexts.splice(i,1);continue;}ctx.save();ctx.globalAlpha=t.life;ctx.font='bold 14px monospace';ctx.fillStyle='#fff';ctx.shadowBlur=9;ctx.shadowColor='#5bff7f';ctx.textAlign='center';ctx.fillText(t.text,t.x,t.y);ctx.restore();}
+  })();
+  window.addEventListener('resize',function(){cv.width=window.innerWidth;cv.height=window.innerHeight;});
+})();
+
+(function(){var c=document.getElementById('hud-hearts');if(!c)return;for(var i=0;i<10;i++)c.innerHTML+='<svg viewBox="0 0 16 16" style="width:16px;height:16px;flex-shrink:0"><rect x="2" y="0" width="4" height="2" fill="#7a0000"/><rect x="10" y="0" width="4" height="2" fill="#7a0000"/><rect x="0" y="2" width="6" height="8" fill="#ff2222"/><rect x="10" y="2" width="6" height="8" fill="#ff2222"/><rect x="6" y="2" width="4" height="2" fill="#ff2222"/><rect x="2" y="8" width="12" height="2" fill="#ff2222"/><rect x="4" y="10" width="8" height="2" fill="#ff2222"/><rect x="6" y="12" width="4" height="2" fill="#ff2222"/></svg>';})();
+
+document.querySelectorAll('.reveal').forEach(function(el){new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:.1}).observe(el);});
+
+function switchTab(t){document.querySelectorAll('.tbtn').forEach(function(b,i){b.classList.toggle('active',(i===0&&t==='m')||(i===1&&t==='e'));});document.getElementById('ch-m').classList.toggle('active',t==='m');document.getElementById('ch-e').classList.toggle('active',t==='e');}
+
+function loadVideos(handle,id){
+  var el=document.getElementById(id);
+  fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.youtube.com/feeds/videos.xml?user='+handle)).then(function(r){return r.json();}).then(function(data){
+    var xml=new DOMParser().parseFromString(data.contents,'text/xml');
+    var entries=Array.from(xml.querySelectorAll('entry')).slice(0,6);if(!entries.length)throw new Error('none');
+    el.innerHTML=entries.map(function(e){var title=e.querySelector('title')?e.querySelector('title').textContent:'Untitled';var link=e.querySelector('link')?e.querySelector('link').getAttribute('href'):'#';var vid=link.split('v=')[1]||'';var thumb=vid?'https://i.ytimg.com/vi/'+vid+'/hqdefault.jpg':'';return '<a href="'+link+'" target="_blank" class="vcard">'+(thumb?'<img src="'+thumb+'" class="vthumb" loading="lazy"/>':'<div class="vph">&#9654;</div>')+'<div class="vinfo"><div class="vtitle">'+title+'</div><div class="vch">@'+handle+'</div><span class="vwatch">&#9654; Watch &rarr;</span></div></a>';}).join('');
+  }).catch(function(){el.innerHTML='<a href="https://youtube.com/@'+handle+'" target="_blank" class="vcard" style="grid-column:1/-1"><div class="vph">&#9654;</div><div class="vinfo"><div class="vtitle">Watch all videos on YouTube</div><div class="vch">@'+handle+'</div><span class="vwatch">&#9654; Visit Channel &rarr;</span></div></a>';});
+}
+loadVideos('zaemonspy','v-m');
+loadVideos('zaemonextra','v-e');
+
+window.addEventListener('keydown',function(e){var n=parseInt(e.key);if(n>=1&&n<=9)document.querySelectorAll('.hb-slot').forEach(function(s,i){s.classList.toggle('sel',i===n-1);});});
+</script>
+</body>
+</html>
